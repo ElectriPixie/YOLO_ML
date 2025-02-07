@@ -1,0 +1,5 @@
+image.jpg
+datasets/
+runs/
+trained_model.pt
+yolo11n.pt
