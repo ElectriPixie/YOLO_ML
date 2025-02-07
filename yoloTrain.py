@@ -9,13 +9,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = YOLO("yolo11n.pt")
 
 # Set the training dataset
-#dataset = "coco8.yaml"
-# Set the training and validation datasets
-train_dataset = "coco8-train.yaml"
+dataset = "coco8.yaml"
 
 # Train the model
 model.train(
-    data=train_dataset,
+    data=dataset,
     epochs=10,
     model="yolo11n.pt",
     lr0=0.01,
