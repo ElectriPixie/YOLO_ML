@@ -1,42 +1,26 @@
-import cv2
-import numpy as np
+import os
+import torch
+from ultralytics import YOLO
+
+# Set the device (CPU or GPU)
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = "cpu"
 
 # Load the YOLO model
-net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
+model = YOLO("yolo11n.pt")
 
-# Load the COCO class labels
-classes = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat", "bird", "cat", "dog", "horse"]
+# Set the training dataset
+dataset = "coco8.yaml"
 
-# Load the image
-img = cv2.imread("image.jpg")
+# Train the model
+model.train(
+    data=dataset,
+    epochs=10,
+    model="yolo11n.pt",
+    lr0=0.01,
+    batch=32,
+    imgsz=640,
+)
 
-# Convert the image to a blob
-blob = cv2.dnn.blobFromImage(img, 1/255, (416, 416), (0, 0, 2), True, False)
-
-# Set the input blob for the network
-net.setInput(blob)
-
-# Run the YOLO object detection
-outs = net.forward(net.getUnconnectedOutLayers())
-
-# Loop through the detections
-for i in range(len(outs)):
-    for j in range(len(outs[i])):
-        confidence = outs[i][j][2]
-        if confidence > 0.5:
-            # Get the class ID and confidence
-            class_id = int(outs[i][j][0])
-            class_name = classes[class_id]
-
-            # Get the bounding box coordinates
-            x, y, w, h = outs[i][j][3:7]
-            x, y, w, h = int(x), int(y), int(w), int(h)
-
-            # Draw the bounding box
-            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            cv2.putText(img, class_name, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-# Display the output
-cv2.imshow("Output", img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# Save the trained model
+model.save("trained_model.pt")
