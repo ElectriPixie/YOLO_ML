@@ -1,2 +1,2 @@
 # YOLO
-YOLO: Algorithm for Object Detection Example
+YOLO: Algorithm for Object Detection Examples
