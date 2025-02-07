@@ -4,3 +4,5 @@ runs/
 trained_model.pt
 yolo11n.pt
 image_plot.jpg
+image_with_legend.jpg
+legend.jpg
