@@ -34,10 +34,18 @@ if image is None:
 # Make predictions
 results = trained_model.predict(image)
 
+# Function to convert HSV to RGB
+def hsv_to_rgb(h, s, v):
+    return tuple(int(i) for i in cv2.cvtColor(np.array([[[h, s, v]]], dtype=np.uint8), cv2.COLOR_HSV2BGR)[0][0])
+
 # Create a dictionary to store unique class colors
 class_colors = {}
 
-# Extract detected classes and assign colors randomly
+# List of hues to ensure distinct colors (every 30 units apart to avoid similarity)
+hue_step = 30
+hue_values = [i * hue_step % 180 for i in range(12)]  # Limiting to 12 distinct hues, each 30 degrees apart
+
+# Extract detected classes and assign colors randomly with distinct hues
 for result in results:
     for box in result.boxes:
         class_id = int(box.cls[0])
@@ -47,9 +55,22 @@ for result in results:
             class_name = 'Unknown Class'
         
         if class_name not in class_colors:
-            # Assign a random color (RGB format)
-            class_colors[class_name] = tuple(random.randint(0, 255) for _ in range(3))
-
+            # Assign a hue from the distinct hue values
+            hue = hue_values[len(class_colors) % len(hue_values)]  # Cycle through the hue values
+            
+            # Random saturation and value to ensure the color is bright and vivid
+            saturation = random.randint(150, 255)
+            value = random.randint(150, 255)
+            
+            # Convert HSV to RGB and store the color
+            color = hsv_to_rgb(hue, saturation, value)
+            
+            # Ensure the color is not already assigned (though the hue step should prevent this)
+            while color in class_colors.values():
+                hue = (hue + hue_step) % 180  # Change hue to get a new color
+                color = hsv_to_rgb(hue, saturation, value)
+            
+            class_colors[class_name] = color
 
 # Process results and draw bounding boxes
 for result in results:
@@ -61,12 +82,13 @@ for result in results:
 
         # Draw bounding box
         cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
+        # Optionally add the class label text
         #cv2.putText(image, class_name, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
 # Create a left-aligned legend dynamically
 legend_width = image.shape[1]  # Match the width of the image
 legend_height = len(class_colors) * 50  # Dynamic height based on classes detected
-legend_bg_color = tuple(map(int, args.legend_bg_color.split(",")))  # Light gray background
+legend_bg_color = tuple(map(int, args.legend_bg_color.split(",")))[::-1]  # Light gray background
 legend_image = np.full((legend_height, legend_width, 3), legend_bg_color, dtype=np.uint8)
 
 # Draw legend with random class colors
